@@ -6,7 +6,6 @@
 package mini_mirc_server;
 
 import org.apache.thrift.TException;
-import mini_mirc_server.miniIRC;
 
 /**
  *
