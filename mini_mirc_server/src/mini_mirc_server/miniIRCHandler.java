@@ -206,6 +206,41 @@ public class miniIRCHandler implements miniIRC.Iface {
         return ret;
     }
     
+    private int UpdateLastActive (String username){
+        int ret = 0;
+        try {
+            
+            MongoClient mongoClient = new MongoClient();
+            DB db = mongoClient.getDB( "mirc" );
+            DBCollection coll = db.getCollection("activeUser");
+            BasicDBObject query = new BasicDBObject("username", username);
+
+            DBCursor cursor = coll.find(query);
+            
+            try {
+                if(cursor.hasNext()) {
+                    DBObject temp = cursor.next();
+                    java.util.Date date= new java.util.Date();
+                    temp.put("timestamp",date);
+                    coll.save(temp);
+                }
+                else {
+                    java.util.Date date= new java.util.Date();
+                    BasicDBObject doc = new BasicDBObject ("username", username)
+                            .append("timestamp", date);
+                    coll.insert(doc);
+                    System.out.println(username + " online !");
+                }
+            } finally {
+                cursor.close();
+            }
+            
+        }   catch (UnknownHostException ex) {
+            Logger.getLogger(miniIRCHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return 0;
+    }
+    
     /**
      * Moved active user to a passive user (soon to be deleted)
      * @param username
@@ -269,4 +304,9 @@ public class miniIRCHandler implements miniIRC.Iface {
         return ret;
     }
     
+    private int PutMessage(String username, String channelname, String msg){
+        int ret = 0;
+        
+        return 0;
+    }
 }
