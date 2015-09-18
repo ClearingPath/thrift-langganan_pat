@@ -4,15 +4,24 @@
 {channel:"Channel2",username:"S3"}
 dst
 
+DC
+AddChannel
+DeleteChannel
 jadi nanti diquery berdasarkan nama channel
 
 #online_user
 {username:"",timestamp:""}
 dst
+CRUD
+Add_user
+Update_timestamp
+Delete_user
 
 #inbox
-{username:"xxx",channel:"channel1",message:"",timestamp:""}
+{target:"",username:"xxx",channel:"channel1",message:"",timestamp:""}
 dst
+AddMessage
+CollectMessage
  
 Fungsi external untuk server
 check user online_user
