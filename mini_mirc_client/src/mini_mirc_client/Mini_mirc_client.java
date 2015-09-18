@@ -39,15 +39,14 @@ public class Mini_mirc_client {
 		public void run(){
 		    try{
 			updateMsg(client);
+			Thread.sleep(1000);
 		    } catch (Exception E){
 			E.printStackTrace();
 		    }
 		}
 	    };
 	    
-	    //transport.open();
 	    perform(transport, client);
-	    //transport.close();
 	    
 	} catch (Exception E){
 	    E.printStackTrace();
@@ -75,6 +74,7 @@ public class Mini_mirc_client {
 	transport.open();
 	int res = client.regUser(username);
 	transport.close();
+	
 	if (res == 0){
 	    System.out.println("Status: Registered user: " + username);
 	} else {
@@ -83,7 +83,7 @@ public class Mini_mirc_client {
 	
 	while (!exit){
 	    String command = input.nextLine();
-	    //parse command
+	    
 	    String resSplit[] = command.split(" ", 2);
     	    String commandWord = resSplit[0].toUpperCase();
 	    
@@ -116,6 +116,7 @@ public class Mini_mirc_client {
 		    
 		    break;
 		case "/LEAVE":
+		    
 		    if (username.isEmpty()){
 			System.out.println("Error: Unregistered user");
 		    } else {
@@ -125,6 +126,7 @@ public class Mini_mirc_client {
 			else System.out.println("Error: Channel error!");
 		    }
 		    break;
+		    
 		case "/EXIT":
 		    System.out.println("Status: " + username + " closing...");
 		    exit = true;
@@ -135,6 +137,13 @@ public class Mini_mirc_client {
 		    else System.out.println("Error: Channel error!");
 		    break;
 		    
+		default:
+		    if (resSplit[0].startsWith("@")){ // message
+			client.message(username, resSplit[0].substring(1), resSplit[1]);
+		    } else {
+			System.out.println("Error: Wrong command " + resSplit[0]);
+		    }
+		    break;
 	    }
 	}
 	
@@ -143,7 +152,8 @@ public class Mini_mirc_client {
     
     public static void updateMsg(miniIRC.Client client) throws TException {
 	newMsg = client.regularUpdate(username);
+	System.out.println("Got update!");
+	System.out.println(newMsg);
     }
-    
     
 }
