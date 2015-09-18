@@ -46,7 +46,7 @@ public class Mini_mirc_client {
 	String commonUsername[] = {"Earthshaker", "Sven", "Tiny", "Kunkka", "Beastmaster", "DragonKnight", "Axe", "Pudge", "SandKing", "Slardar", "Tidehunter", "WraithKing"};
 	String uname;
 	
-	int randIndex = (int) Math.round(Math.random() * commonUsername.length);
+	int randIndex = (int) Math.round(Math.random() * (commonUsername.length - 1));
 	int randEnd = (int) (Math.random() * 999);
 	uname = commonUsername[randIndex] + randEnd;
 	System.out.println("Status: Generated new username: " + uname);
@@ -57,8 +57,8 @@ public class Mini_mirc_client {
     private static void perform (miniIRC.Client client) throws TException {
 	boolean exit = false;
 	Scanner input = new Scanner(System.in);
-	String command = input.nextLine();
 	String username = generateUname();
+	String command = input.nextLine();
 	
 	//auto-regis
 	int res = client.regUser(username);
