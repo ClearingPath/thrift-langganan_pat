@@ -261,7 +261,7 @@ public class miniIRCHandler implements miniIRC.Iface {
                 if (cursor.hasNext()){
                     DBObject temp = cursor.next();
                     coll2.insert(temp);
-                    coll.dropIndex(temp);
+                    coll.remove(temp);
                     System.out.println(cursor.next().get(username) + " has been soft deleted!");
                 }
                 else {
@@ -291,7 +291,7 @@ public class miniIRCHandler implements miniIRC.Iface {
                 while (cursor.hasNext()){
                     DBObject temp = cursor.next();
                     arr.add(temp);
-                    coll.dropIndex(temp);
+                    coll.remove(temp);
                 }
                 obj.put("msg",arr);
                 ret = obj.toJSONString();
@@ -306,7 +306,18 @@ public class miniIRCHandler implements miniIRC.Iface {
     
     private int PutMessage(String username, String channelname, String msg){
         int ret = 0;
-        
-        return 0;
+        try {    
+            MongoClient mongoClient = new MongoClient();
+            DB db = mongoClient.getDB( "mirc" );
+            DBCollection coll = db.getCollection("inbox");
+            DBCollection coll2 = db.getCollection(channelname);
+            BasicDBObject query = new BasicDBObject("channel", channelname);
+            DBCursor cursor = coll2.find(query);
+            
+            
+        } catch (UnknownHostException ex) {
+            Logger.getLogger(miniIRCHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return ret;
     }
 }

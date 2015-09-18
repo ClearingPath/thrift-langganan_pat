@@ -18,7 +18,7 @@ Update_timestamp
 Delete_user
 
 #inbox
-{username:"xxx",channel:"channel1",message:"",timestamp:""}
+{target:"",username:"xxx",channel:"channel1",message:"",timestamp:""}
 dst
 AddMessage
 CollectMessage
