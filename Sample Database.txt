@@ -1,0 +1,20 @@
+#database channel diquery berdasarkan channel
+{channel:"Channel1",username:"S1"}
+{channel:"Channel1",username:"S2"}
+{channel:"Channel2",username:"S3"}
+dst
+
+jadi nanti diquery berdasarkan nama channel
+
+#online_user
+{username:"",timestamp:""}
+dst
+
+#inbox
+{username:"xxx",channel:"channel1",message:"",timestamp:""}
+dst
+ 
+Fungsi external untuk server
+check user online_user
+delete user di channel tsb
+delete message di inbox
