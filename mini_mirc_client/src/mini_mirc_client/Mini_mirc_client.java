@@ -46,6 +46,8 @@ public class Mini_mirc_client {
 		}
 	    };
 	    
+            new Thread(updateThread).start();
+	    
 	    perform(transport, client);
 	    
 	} catch (Exception E){
@@ -82,6 +84,7 @@ public class Mini_mirc_client {
 	}
 	
 	while (!exit){
+	    System.out.print("> ");
 	    String command = input.nextLine();
 	    
 	    String resSplit[] = command.split(" ", 2);
@@ -133,21 +136,29 @@ public class Mini_mirc_client {
 		    username = "";
 		    res = client.exit(username);
 		    
-		    if (res == 0) System.out.println("Status: Exit success"); 
-		    else System.out.println("Error: Channel error!");
+		    if (res == 0) 
+			System.out.println("Status: Exit success"); 
+		    else 
+			System.out.println("Error: Channel error! Error code #" + res);
 		    break;
 		    
 		default:
+		    
 		    if (resSplit[0].startsWith("@")){ // message
-			client.message(username, resSplit[0].substring(1), resSplit[1]);
+			System.out.println("message mode");
+			res = client.message(username, resSplit[0].substring(1), resSplit[1]);
+			if (res == 0) {
+			    System.out.println("Status: Msg to " + resSplit[0].substring(1) + " sent"); 
+			} 
 		    } else {
 			System.out.println("Error: Wrong command " + resSplit[0]);
 		    }
 		    break;
 	    }
+	    transport.close();
+	
 	}
 	
-	transport.close();
     }
     
     public static void updateMsg(miniIRC.Client client) throws TException {
