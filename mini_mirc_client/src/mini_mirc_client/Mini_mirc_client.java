@@ -132,15 +132,17 @@ public class Mini_mirc_client {
 		    
 		case "/EXIT":
 		    System.out.println("Status: " + username + " closing...");
-		    exit = true;
+		    
 		    res = client.exit(username);
 		    
-		    username = "";
-		    
-		    if (res == 0) 
+		    if (res == 0) {
 			System.out.println("Status: Exit success"); 
-		    else 
+			username = "";
+			exit = true;
+		    }
+		    else {
 			System.out.println("Error: Channel error! Error code #" + res);
+		    }
 		    break;
 		    
 		default:
