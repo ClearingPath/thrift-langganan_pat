@@ -42,11 +42,31 @@ public class Mini_mirc_client {
 	}
     }
     
+    public static String generateUname(){
+	String commonUsername[] = {"Earthshaker", "Sven", "Tiny", "Kunkka", "Beastmaster", "DragonKnight", "Axe", "Pudge", "SandKing", "Slardar", "Tidehunter", "WraithKing"};
+	String uname;
+	
+	int randIndex = (int) Math.round(Math.random() * commonUsername.length);
+	int randEnd = (int) (Math.random() * 999);
+	uname = commonUsername[randIndex] + randEnd;
+	System.out.println("Status: Generated new username: " + uname);
+	
+	return uname;
+    }
+    
     private static void perform (miniIRC.Client client) throws TException {
 	boolean exit = false;
 	Scanner input = new Scanner(System.in);
 	String command = input.nextLine();
-	String username = "";
+	String username = generateUname();
+	
+	//auto-regis
+	int res = client.regUser(username);
+	if (res == 0){
+	    System.out.println("Status: Registered user: " + username);
+	} else {
+	    System.out.println("Error: Unidentified error on register!");
+	}
 	
 	while (!exit){
 	    //parse command
@@ -64,11 +84,11 @@ public class Mini_mirc_client {
 			
 		    }
 		    break;
-		case "/JOIN":
+		case "/JOIN": 
 		    System.out.println("Status: Checking  channel: " + resSplit[1]);
-		    int res = client.join(username, resSplit[1]);
+		    res = client.join(username, resSplit[1]);
 		    if (res == 0){
-			System.out.println("");
+			System.out.println("Status: Joined channel: " + resSplit[1]);
 		    } else {
 			if (res == 1){
 			    System.out.println("Error: Channel " + resSplit[1] + " already joined!");
@@ -77,13 +97,21 @@ public class Mini_mirc_client {
 		    
 		    break;
 		case "/LEAVE":
+		    if (username.isEmpty()){
+			System.out.println("Error: Unregistered user");
+		    } else {
+			//todo
+			
+		    }
 		    break;
 		case "/EXIT":
+		    System.out.println("Status: " + username + " exits");
 		    exit = true;
+		    username = "";
 		    break;
 		    
 	    }
-	    
+	    command = input.nextLine();
 	}
     }
     
