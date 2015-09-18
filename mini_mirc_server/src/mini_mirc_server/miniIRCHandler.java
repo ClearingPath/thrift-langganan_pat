@@ -10,6 +10,9 @@ import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.MongoClient;
+import java.net.UnknownHostException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.thrift.TException;
 
 /**
@@ -55,56 +58,76 @@ public class miniIRCHandler implements miniIRC.Iface {
     
     private int AddChannel(String Username, String Channel){
         int ret = 0;
-        MongoClient mongoClient = new MongoClient();
-        DB db = mongoClient.getDB( "mirc" );
-        DBCollection coll = db.getCollection("channelCollection");
-        BasicDBObject query = new BasicDBObject("username", Username)
-                                        .append("channel", Channel);
-
-        DBCursor cursor = coll.find(query);
-
         try {
-           if(cursor.hasNext()) {
-               ret = 1;
-               System.err.println(Username + " has joined Channel : " + Channel + "!");
-           }
-           else {
-               BasicDBObject doc = new BasicDBObject ("username",Username)
-                                              .append("Channel", Channel);
-               coll.insert(doc);
-               //Extend : Give message if new channel created
-               System.out.println(Username + " joined Channel : " + Channel);
-           }
-        } finally {
-           cursor.close();
+            
+            MongoClient mongoClient = new MongoClient();
+            DB db = mongoClient.getDB( "mirc" );
+            DBCollection coll = db.getCollection("channelCollection");
+            BasicDBObject query = new BasicDBObject("username", Username)
+                    .append("channel", Channel);
+            
+            DBCursor cursor = coll.find(query);
+            
+            try {
+                if(cursor.hasNext()) {
+                    ret = 1;
+                    System.err.println(Username + " has joined Channel : " + Channel + "!");
+                }
+                else {
+                    query = new BasicDBObject ("channel", Channel);
+                    DBCursor cursor2 = coll.find(query);
+                    try{
+                        if (!cursor2.hasNext()){
+                            ret = 2;
+                        }
+                    } finally {
+                        cursor2.close();
+                    }
+                    BasicDBObject doc = new BasicDBObject ("username",Username)
+                            .append("channel", Channel);
+                    coll.insert(doc);
+                    System.out.println(Username + " joined Channel : " + Channel);
+                }
+            } finally {
+                cursor.close();
+            }
+            
+        }   catch (UnknownHostException ex) {
+            Logger.getLogger(miniIRCHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
         return ret;
     }
     
     private int AddUser (String username){
         int ret = 0;
-        MongoClient mongoClient = new MongoClient();
-        DB db = mongoClient.getDB( "mirc" );
-        DBCollection coll = db.getCollection("activeUser");
-        BasicDBObject query = new BasicDBObject("username", username);
-        
-        DBCursor cursor = coll.find(query);
-        
         try {
-           if(cursor.hasNext()) {
-               ret = 1;
-               System.err.println(username + " has been used !");
-           }
-           else {
-               java.util.Date date= new java.util.Date();
-               BasicDBObject doc = new BasicDBObject ("username", username)
-                                              .append("timestamp", date);
-               coll.insert(doc);
-               System.out.println(username + " online !");
-           }
-        } finally {
-           cursor.close();
+            
+            MongoClient mongoClient = new MongoClient();
+            DB db = mongoClient.getDB( "mirc" );
+            DBCollection coll = db.getCollection("activeUser");
+            BasicDBObject query = new BasicDBObject("username", username);
+            
+            DBCursor cursor = coll.find(query);
+            
+            try {
+                if(cursor.hasNext()) {
+                    ret = 1;
+                    System.err.println(username + " has been used !");
+                }
+                else {
+                    java.util.Date date= new java.util.Date();
+                    BasicDBObject doc = new BasicDBObject ("username", username)
+                            .append("timestamp", date);
+                    coll.insert(doc);
+                    System.out.println(username + " online !");
+                }
+            } finally {
+                cursor.close();
+            }
+            
+        }   catch (UnknownHostException ex) {
+            Logger.getLogger(miniIRCHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
         return ret;
-    }
+    } 
 }
