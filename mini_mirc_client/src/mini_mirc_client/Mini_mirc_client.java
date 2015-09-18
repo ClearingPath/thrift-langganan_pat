@@ -25,19 +25,29 @@ public class Mini_mirc_client {
      */
     
     public static String username = "";
+    public static String newMsg;
     public static void main(String[] args) {
         
 	try{
 	    TTransport transport;
 	    transport = new TSocket("localhost", 2121);
-	    transport.open();
 	    
 	    TProtocol protocol = new TBinaryProtocol(transport);
 	    miniIRC.Client client = new miniIRC.Client (protocol);
 	    
-	    perform(client);
+	    Runnable updateThread = new Runnable(){
+		public void run(){
+		    try{
+			updateMsg(client);
+		    } catch (Exception E){
+			E.printStackTrace();
+		    }
+		}
+	    };
 	    
-	    transport.close();
+	    //transport.open();
+	    perform(transport, client);
+	    //transport.close();
 	    
 	} catch (Exception E){
 	    E.printStackTrace();
@@ -56,12 +66,15 @@ public class Mini_mirc_client {
 	username = uname;
     }
     
-    private static void perform (miniIRC.Client client) throws TException {
+    private static void perform (TTransport transport, miniIRC.Client client) throws TException {
 	boolean exit = false;
 	Scanner input = new Scanner(System.in);
 	
+	generateUname();
 	//auto-regis
+	transport.open();
 	int res = client.regUser(username);
+	transport.close();
 	if (res == 0){
 	    System.out.println("Status: Registered user: " + username);
 	} else {
@@ -74,10 +87,14 @@ public class Mini_mirc_client {
 	    String resSplit[] = command.split(" ", 2);
     	    String commandWord = resSplit[0].toUpperCase();
 	    
+	    transport.open();
+	    
 	    switch (commandWord){
 		case "/NICK":
 		    System.out.println("Status: Registering user: " + resSplit[1]);
-		    if (client.regUser(resSplit[1]) == 0){
+		    res = client.regUser(resSplit[1]);
+		    
+		    if (res == 0){
 			System.out.println("Status: Registered user: " + resSplit[1]);
 			username = resSplit[1];
 		    }
@@ -87,6 +104,7 @@ public class Mini_mirc_client {
 		    break;
 		case "/JOIN": 
 		    System.out.println("Status: Checking channel: " + resSplit[1]);
+		    
 		    res = client.join(username, resSplit[1]);
 		    if (res == 0){
 			System.out.println("Status: Joined channel: " + resSplit[1]);
@@ -101,23 +119,31 @@ public class Mini_mirc_client {
 		    if (username.isEmpty()){
 			System.out.println("Error: Unregistered user");
 		    } else {
-			
-			System.out.println("Status: " + username + " exitting channel " + resSplit[1]);
-			client.leave(username, resSplit[1]);
-			
+			System.out.println("Status: " + username + " exiting channel " + resSplit[1]);
+			res = client.leave(username, resSplit[1]);
+			if (res == 0) System.out.println("Status: Success"); 
+			else System.out.println("Error: Channel error!");
 		    }
 		    break;
 		case "/EXIT":
-		    System.out.println("Status: " + username + " exits");
+		    System.out.println("Status: " + username + " closing...");
 		    exit = true;
 		    username = "";
+		    res = client.exit(username);
+		    
+		    if (res == 0) System.out.println("Status: Exit success"); 
+		    else System.out.println("Error: Channel error!");
 		    break;
 		    
 	    }
 	}
+	
+	transport.close();
     }
     
-    
+    public static void updateMsg(miniIRC.Client client) throws TException {
+	newMsg = client.regularUpdate(username);
+    }
     
     
 }
