@@ -46,7 +46,7 @@ public class Mini_mirc_client {
 		}
 	    };
 	    
-            new Thread(updateThread).start();
+            //new Thread(updateThread).start();
 	    
 	    perform(transport, client);
 	    
@@ -133,8 +133,9 @@ public class Mini_mirc_client {
 		case "/EXIT":
 		    System.out.println("Status: " + username + " closing...");
 		    exit = true;
-		    username = "";
 		    res = client.exit(username);
+		    
+		    username = "";
 		    
 		    if (res == 0) 
 			System.out.println("Status: Exit success"); 
