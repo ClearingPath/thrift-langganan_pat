@@ -9,11 +9,14 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import java.net.UnknownHostException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.thrift.TException;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONArray;
 
 /**
  *
@@ -33,19 +36,17 @@ public class miniIRCHandler implements miniIRC.Iface {
 
     @Override
     public int leave(String username, String channelname) throws TException {
-        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        return 0;
+        return DeleteChannelUser(channelname,username);
     }
 
     @Override
     public int exit(String username) throws TException {
-        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        return 0;
+        return SoftDelete(username);
     }
 
     @Override
     public int message(String username, String channelname, String msg) throws TException {
-        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+       
         return 0;
     }
 
@@ -55,7 +56,12 @@ public class miniIRCHandler implements miniIRC.Iface {
         String ret = "";
         return ret;
     }
-    
+    /**
+     * Add a user to a channel (can check if the channel is a new channel)
+     * @param Username
+     * @param Channel
+     * @return code
+     */
     private int AddChannel(String Username, String Channel){
         int ret = 0;
         try {
@@ -98,6 +104,75 @@ public class miniIRCHandler implements miniIRC.Iface {
         return ret;
     }
     
+    /**
+     * Delete a user from a channel (used in leave method)
+     * @param Channel
+     * @param Username
+     * @return code
+     */
+    private int DeleteChannelUser(String Channel,String Username){
+        int ret = 0;
+        try {
+            
+            MongoClient mongoClient = new MongoClient();
+            DB db = mongoClient.getDB( "mirc" );
+            DBCollection coll = db.getCollection("channelCollection");
+            BasicDBObject query = new BasicDBObject("username", Username)
+                                       .append("channel",Channel);
+            
+            DBCursor cursor = coll.find(query);
+            
+            try {
+                while(cursor.hasNext()) {
+                    coll.dropIndex(cursor.next());
+                }
+            } finally {
+                cursor.close();
+            }
+            
+        }   catch (UnknownHostException ex) {
+            Logger.getLogger(miniIRCHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        System.out.println(Username + " has leaved Channel : " + Channel);
+        return ret;
+    }
+    
+    /**
+     * Delete a user in all channel (used in cleaning)
+     * @param Username
+     * @return code
+     */
+    public static int DeleteUserInChannel (String Username){
+        int ret = 0;
+        try {
+            
+            MongoClient mongoClient = new MongoClient();
+            DB db = mongoClient.getDB( "mirc" );
+            DBCollection coll = db.getCollection("channelCollection");
+            BasicDBObject query = new BasicDBObject("username", Username);
+            
+            DBCursor cursor = coll.find(query);
+            
+            try {
+                while(cursor.hasNext()) {
+                    coll.dropIndex(cursor.next());
+                }
+            } finally {
+                cursor.close();
+            }
+            
+        }   catch (UnknownHostException ex) {
+            Logger.getLogger(miniIRCHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        System.out.println(Username + " has been deleted in Channel Collection!");
+        return ret;
+    }
+    
+    /**
+     * Register a user to the server (used in RegUser)
+     * @param username
+     * @return code
+     */
     private int AddUser (String username){
         int ret = 0;
         try {
@@ -106,7 +181,7 @@ public class miniIRCHandler implements miniIRC.Iface {
             DB db = mongoClient.getDB( "mirc" );
             DBCollection coll = db.getCollection("activeUser");
             BasicDBObject query = new BasicDBObject("username", username);
-            
+
             DBCursor cursor = coll.find(query);
             
             try {
@@ -129,5 +204,69 @@ public class miniIRCHandler implements miniIRC.Iface {
             Logger.getLogger(miniIRCHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
         return ret;
-    } 
+    }
+    
+    /**
+     * Moved active user to a passive user (soon to be deleted)
+     * @param username
+     * @return code
+     */
+    public static int SoftDelete (String username){
+        int ret = 0;
+        try {
+            MongoClient mongoClient = new MongoClient();
+            DB db = mongoClient.getDB( "mirc" );
+            DBCollection coll = db.getCollection("activeUser");
+            DBCollection coll2 = db.getCollection("passiveUser");
+            BasicDBObject query = new BasicDBObject("username", username);
+            
+            DBCursor cursor = coll.find(query);
+            
+            try {
+                if (cursor.hasNext()){
+                    DBObject temp = cursor.next();
+                    coll2.insert(temp);
+                    coll.dropIndex(temp);
+                    System.out.println(cursor.next().get(username) + " has been soft deleted!");
+                }
+                else {
+                    ret = 1;
+                }
+            } finally{
+                cursor.close();
+            }
+        } catch (UnknownHostException ex) {
+            Logger.getLogger(miniIRCHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return ret;
+    }
+    
+    public static String GetMessages(String username){
+        String ret ="";
+        try {
+            MongoClient mongoClient = new MongoClient();
+            DB db = mongoClient.getDB( "mirc" );
+            DBCollection coll = db.getCollection("activeUser");
+            BasicDBObject query = new BasicDBObject("username", username);
+            JSONObject obj = new JSONObject();
+            JSONArray arr = new JSONArray();
+            DBCursor cursor = coll.find(query);
+            
+            try {
+                while (cursor.hasNext()){
+                    DBObject temp = cursor.next();
+                    arr.add(temp);
+                    coll.dropIndex(temp);
+                }
+                obj.put("msg",arr);
+                ret = obj.toJSONString();
+            } finally{
+                cursor.close();
+            }
+        } catch (UnknownHostException ex) {
+            Logger.getLogger(miniIRCHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return ret;
+    }
+    
 }
