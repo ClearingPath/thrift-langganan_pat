@@ -23,6 +23,8 @@ public class Mini_mirc_client {
     /**
      * @param args the command line arguments
      */
+    
+    public static String username = "";
     public static void main(String[] args) {
         
 	try{
@@ -42,7 +44,7 @@ public class Mini_mirc_client {
 	}
     }
     
-    public static String generateUname(){
+    public static void generateUname(){
 	String commonUsername[] = {"Earthshaker", "Sven", "Tiny", "Kunkka", "Beastmaster", "DragonKnight", "Axe", "Pudge", "SandKing", "Slardar", "Tidehunter", "WraithKing"};
 	String uname;
 	
@@ -51,14 +53,12 @@ public class Mini_mirc_client {
 	uname = commonUsername[randIndex] + randEnd;
 	System.out.println("Status: Generated new username: " + uname);
 	
-	return uname;
+	username = uname;
     }
     
     private static void perform (miniIRC.Client client) throws TException {
 	boolean exit = false;
 	Scanner input = new Scanner(System.in);
-	String username = generateUname();
-	String command = input.nextLine();
 	
 	//auto-regis
 	int res = client.regUser(username);
@@ -69,9 +69,11 @@ public class Mini_mirc_client {
 	}
 	
 	while (!exit){
+	    String command = input.nextLine();
 	    //parse command
 	    String resSplit[] = command.split(" ", 2);
     	    String commandWord = resSplit[0].toUpperCase();
+	    
 	    switch (commandWord){
 		case "/NICK":
 		    System.out.println("Status: Registering user: " + resSplit[1]);
@@ -81,11 +83,10 @@ public class Mini_mirc_client {
 		    }
 		    else {
 			System.out.println("Error: Unidentified error on register!");
-			
 		    }
 		    break;
 		case "/JOIN": 
-		    System.out.println("Status: Checking  channel: " + resSplit[1]);
+		    System.out.println("Status: Checking channel: " + resSplit[1]);
 		    res = client.join(username, resSplit[1]);
 		    if (res == 0){
 			System.out.println("Status: Joined channel: " + resSplit[1]);
@@ -100,7 +101,9 @@ public class Mini_mirc_client {
 		    if (username.isEmpty()){
 			System.out.println("Error: Unregistered user");
 		    } else {
-			//todo
+			
+			System.out.println("Status: " + username + " exitting channel " + resSplit[1]);
+			client.leave(username, resSplit[1]);
 			
 		    }
 		    break;
@@ -111,7 +114,6 @@ public class Mini_mirc_client {
 		    break;
 		    
 	    }
-	    command = input.nextLine();
 	}
     }
     
