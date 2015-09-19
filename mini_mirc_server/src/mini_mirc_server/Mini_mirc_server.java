@@ -36,7 +36,6 @@ public class Mini_mirc_server {
             };
             
             new Thread(simple).start();
-            System.out.println(miniIRCHandler.SoftDelete("udib"));
         } catch (Exception x){
             x.printStackTrace();
         }

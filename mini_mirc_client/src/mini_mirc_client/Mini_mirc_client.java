@@ -11,6 +11,8 @@ package mini_mirc_client;
  */
 
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
@@ -134,7 +136,6 @@ public class Mini_mirc_client {
 		    System.out.println("Status: " + username + " closing...");
 		    
 		    res = client.exit(username);
-		    
 		    if (res == 0) {
 			System.out.println("Status: Exit success"); 
 			username = "";

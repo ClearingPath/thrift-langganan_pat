@@ -41,6 +41,7 @@ public class miniIRCHandler implements miniIRC.Iface {
 
     @Override
     public int exit(String username) throws TException {
+        System.out.println(username + " exiting...");
         return SoftDelete(username);
     }
 
@@ -124,7 +125,7 @@ public class miniIRCHandler implements miniIRC.Iface {
             
             try {
                 while(cursor.hasNext()) {
-                    coll.dropIndex(cursor.next());
+                    coll.remove(cursor.next());
                 }
             } finally {
                 cursor.close();
@@ -155,7 +156,7 @@ public class miniIRCHandler implements miniIRC.Iface {
             
             try {
                 while(cursor.hasNext()) {
-                    coll.dropIndex(cursor.next());
+                    coll.remove(cursor.next());
                 }
             } finally {
                 cursor.close();
@@ -246,7 +247,7 @@ public class miniIRCHandler implements miniIRC.Iface {
      * @param username
      * @return code
      */
-    public static int SoftDelete (String username){
+    private int SoftDelete (String username){
         int ret = 0;
         try {
             MongoClient mongoClient = new MongoClient();
