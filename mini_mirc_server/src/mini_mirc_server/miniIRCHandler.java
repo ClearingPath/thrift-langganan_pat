@@ -145,7 +145,7 @@ public class miniIRCHandler implements miniIRC.Iface {
      * @param Username
      * @return code
      */
-    public static int DeleteUserInChannel (String Username){
+    public int DeleteUserInChannel (String Username){
         int ret = 0;
         try {
             
@@ -249,7 +249,7 @@ public class miniIRCHandler implements miniIRC.Iface {
      * @param username
      * @return code
      */
-    private int SoftDelete (String username){
+    public int SoftDelete (String username){
         int ret = 0;
         try {
             MongoClient mongoClient = new MongoClient();
@@ -279,7 +279,7 @@ public class miniIRCHandler implements miniIRC.Iface {
         return ret;
     }
     
-    public static String GetMessages(String username){
+    public String GetMessages(String username){
         String ret ="";
         try {
             MongoClient mongoClient = new MongoClient();
@@ -304,6 +304,7 @@ public class miniIRCHandler implements miniIRC.Iface {
         } catch (UnknownHostException ex) {
             Logger.getLogger(miniIRCHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
+        UpdateLastActive(username);
         return ret;
     }
     
