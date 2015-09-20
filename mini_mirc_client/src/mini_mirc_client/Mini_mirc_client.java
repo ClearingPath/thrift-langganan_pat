@@ -19,6 +19,7 @@ import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 import mini_mirc_client.miniIRC;
+import org.json.simple.JSONArray;
 
 public class Mini_mirc_client {
 
@@ -43,8 +44,13 @@ public class Mini_mirc_client {
 		public void run(){
 		    try{
 			while (update){
-			    updateMsg(client);
-			    Thread.sleep(1000);
+			    synchronized(transport){
+				transport.open();
+				updateMsg(client);
+				transport.close();
+			    }
+			    
+			    Thread.sleep(5000);
 			}
 		    } catch (Exception E){
 			E.printStackTrace();
@@ -80,14 +86,16 @@ public class Mini_mirc_client {
 	
 	generateUname();
 	//auto-regis
-	transport.open();
-	int res = client.regUser(username);
-	transport.close();
-	
-	if (res == 0){
-	    System.out.println("Status: Registered user: " + username);
-	} else {
-	    System.out.println("Error: Unidentified error on register!");
+	int res;
+	synchronized(transport){
+	    transport.open();
+	    res = client.regUser(username);
+	    transport.close();
+	    if (res == 0){
+		System.out.println("Status: Registered user: " + username);
+	    } else {
+		System.out.println("Error: Unidentified error on register!");
+	    }
 	}
 	
 	while (!exit){
@@ -97,87 +105,100 @@ public class Mini_mirc_client {
 	    String resSplit[] = command.split(" ", 2);
     	    String commandWord = resSplit[0].toUpperCase();
 	    
-	    transport.open();
-	    
-	    switch (commandWord){
-		case "/NICK":
-		    System.out.println("Status: Registering user: " + resSplit[1]);
-		    res = client.regUser(resSplit[1]);
-		    
-		    if (res == 0){
-			System.out.println("Status: Registered user: " + resSplit[1]);
-			username = resSplit[1];
-		    }
-		    else {
-			System.out.println("Error: Unidentified error on register!");
-		    }
-		    break;
-		case "/JOIN": 
-		    System.out.println("Status: Checking channel: " + resSplit[1]);
-		    
-		    res = client.join(username, resSplit[1]);
-		    if (res == 0 || res == 2){
-			System.out.println("Status: Joined channel: " + resSplit[1]);
-		    } else {
-			if (res == 1){
-			    System.out.println("Error: Channel " + resSplit[1] + " already joined!");
+	    synchronized(transport){
+		transport.open();
+
+		switch (commandWord){
+		    case "/NICK":
+			System.out.println("Status: Registering user: " + resSplit[1]);
+			res = client.regUser(resSplit[1]);
+
+			if (res == 0){
+			    System.out.println("Status: Registered user: " + resSplit[1]);
+			    username = resSplit[1];
 			}
 			else {
-			    System.out.println("Error: code #" + res + " on channel join");
+			    System.out.println("Error: Unidentified error on register!");
 			}
-		    }
-		    
-		    break;
-		case "/LEAVE":
-		    if (username.isEmpty()){
-			System.out.println("Error: Unregistered user");
-		    } else {
-			System.out.println("Status: " + username + " exiting channel " + resSplit[1]);
-			res = client.leave(username, resSplit[1]);
-			if (res == 0) System.out.println("Status: Success"); 
-			else System.out.println("Error: Channel error!");
-		    }
-		    break;
-		    
-		case "/EXIT":
-		    System.out.println("Status: " + username + " closing...");
-		    
-		    res = client.exit(username);
-		    if (res == 0) {
-			System.out.println("Status: Exit success"); 
-			username = "";
-			exit = true;
-			update = false;
-		    }
-		    else {
-			System.out.println("Error: Channel error! Error code #" + res);
-		    }
-		    break;
-		    
-		default:
-		    if (resSplit[0].startsWith("@")){ // message
-			res = client.message(username, resSplit[0].substring(1), resSplit[1]);
+			break;
+		    case "/JOIN": 
+			System.out.println("Status: Checking channel: " + resSplit[1]);
+
+			res = client.join(username, resSplit[1]);
+			if (res == 0 || res == 2){
+			    System.out.println("Status: Joined channel: " + resSplit[1]);
+			} else {
+			    if (res == 1){
+				System.out.println("Error: Channel " + resSplit[1] + " already joined!");
+			    }
+			    else {
+				System.out.println("Error: code #" + res + " on channel join");
+			    }
+			}
+
+			break;
+		    case "/LEAVE":
+			if (username.isEmpty()){
+			    System.out.println("Error: Unregistered user");
+			} else {
+			    System.out.println("Status: " + username + " exiting channel " + resSplit[1]);
+			    res = client.leave(username, resSplit[1]);
+			    if (res == 0) System.out.println("Status: Success"); 
+			    else System.out.println("Error: Channel error!");
+			}
+			break;
+
+		    case "/EXIT":
+			System.out.println("Status: " + username + " closing...");
+
+			res = client.exit(username);
 			if (res == 0) {
-			    System.out.println("Status: Msg to " + resSplit[0].substring(1) + " sent"); 
-			} 
-		    } else {
-			System.out.println("Error: Wrong command " + resSplit[0]);
-		    }
-		    break;
+			    System.out.println("Status: Exit success"); 
+			    username = "";
+			    exit = true;
+			    update = false;
+			}
+			else {
+			    System.out.println("Error: Channel error! Error code #" + res);
+			}
+			break;
+
+		    default:
+			if (resSplit[0].startsWith("@")){ // message
+			    res = client.message(username, resSplit[0].substring(1), resSplit[1]);
+			    if (res == 0) {
+				System.out.println("Status: Msg to " + resSplit[0].substring(1) + " sent"); 
+			    } 
+			} else {
+			    System.out.println("Error: Wrong command " + resSplit[0]);
+			}
+			break;
+		}
+		transport.close();
+		
+		showMsg();
 	    }
-	    transport.close();
-	
 	}
 	
     }
     
     public static void updateMsg(miniIRC.Client client) throws TException {
-	System.out.println("starting update!");
+	//System.out.println("starting update!");
 	
-	newMsg = client.regularUpdate(username);
+	newMsg = newMsg + client.regularUpdate(username);
 	
-	System.out.println("Got update!");
-	System.out.println(newMsg);
+	//System.out.println("Got update!");
+	//System.out.println(newMsg);
+    }
+    
+    public static void showMsg(){
+	JSONArray msgs = new JSONArray();
+	synchronized(newMsg){
+	    System.out.println(newMsg);
+	    newMsg = "";
+	}
+	
+	
     }
     
 }
