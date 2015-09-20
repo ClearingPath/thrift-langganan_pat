@@ -50,7 +50,7 @@ public class Mini_mirc_server {
             Runnable cleaner = new Runnable() {
                 public void run(){
                     try {
-                        Thread.sleep(1000 * 60 * 5);
+                        Thread.sleep(100);
                         while (true){
                             System.out.println("cleaner running...");
                             cleaner();
@@ -67,6 +67,7 @@ public class Mini_mirc_server {
             Runnable ultClean = new Runnable() {
                 public void run(){
                     try {
+                        Thread.sleep(500);
                         while (true){
                             UltimateClean();
                             Thread.sleep(1000 * 60 * 60);
