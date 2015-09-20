@@ -43,11 +43,11 @@ public class Mini_mirc_client {
 		public void run(){
 		    try{
 			while (update){
-                            Thread.sleep(1000);
+                            Thread.sleep(1000 * 5);
                             transport.open();
 			    updateMsg(client);
                             transport.close();
-//			    Thread.sleep(1000);
+			    Thread.sleep(1000);
 			}
 		    } catch (Exception E){
 			E.printStackTrace();

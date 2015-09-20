@@ -283,7 +283,7 @@ public class miniIRCHandler implements miniIRC.Iface {
             MongoClient mongoClient = new MongoClient();
             DB db = mongoClient.getDB( "mirc" );
             DBCollection coll = db.getCollection("inbox");
-            BasicDBObject query = new BasicDBObject("username", username);
+            BasicDBObject query = new BasicDBObject("target", username);
             JSONObject obj = new JSONObject();
             JSONArray arr = new JSONArray();
             DBCursor cursor = coll.find(query);
@@ -315,7 +315,7 @@ public class miniIRCHandler implements miniIRC.Iface {
             DBCollection coll2 = db.getCollection("channelCollection");
             BasicDBObject query = new BasicDBObject("channel", channelname);
             DBCursor cursor = coll2.find(query);
-            
+            System.out.println("Got message from " + username);
             try{
                 java.util.Date date= new java.util.Date();
                 while (cursor.hasNext()){
