@@ -264,7 +264,6 @@ public class miniIRCHandler implements miniIRC.Iface {
                     DBObject temp = cursor.next();
                     coll2.insert(temp);
                     coll.remove(temp);
-                    System.out.println(cursor.next().get(username) + " has been soft deleted!");
                 }
                 else {
                     ret = 1;
@@ -324,7 +323,7 @@ public class miniIRCHandler implements miniIRC.Iface {
                     BasicDBObject temp = (BasicDBObject) cursor.next();
                     String target = temp.get("username").toString();
                     BasicDBObject put = new BasicDBObject("target",target)
-                                        .append("usermane", username)
+                                        .append("username", username)
                                         .append("channel", channelname)
                                         .append("message", msg)
                                         .append("timestamp", date);

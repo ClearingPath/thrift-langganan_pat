@@ -33,7 +33,7 @@ public class Mini_mirc_client {
     public static void main(String[] args) {
         
 	try{
-	    TTransport transport;
+	    final TTransport transport;
 	    transport = new TSocket("localhost", 2121);
 	    
 	    TProtocol protocol = new TBinaryProtocol(transport);
@@ -44,13 +44,12 @@ public class Mini_mirc_client {
 		public void run(){
 		    try{
 			while (update){
+			    Thread.sleep(5000);
 			    synchronized(transport){
 				transport.open();
 				updateMsg(client);
 				transport.close();
 			    }
-			    
-			    Thread.sleep(5000);
 			}
 		    } catch (Exception E){
 			E.printStackTrace();
