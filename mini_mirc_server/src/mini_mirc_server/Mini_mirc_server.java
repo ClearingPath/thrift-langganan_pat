@@ -50,7 +50,7 @@ public class Mini_mirc_server {
             Runnable cleaner = new Runnable() {
                 public void run(){
                     try {
-//                        Thread.sleep(1000 * 60 * 5);
+                        Thread.sleep(1000 * 60 * 5);
                         while (true){
                             System.out.println("cleaner running...");
                             cleaner();
@@ -128,14 +128,14 @@ public class Mini_mirc_server {
                         BasicDBObject temp = (BasicDBObject) cursor.next();
                         String username = temp.getString("username");
                         BasicDBObject query = new BasicDBObject("username", username);
-            
+                        System.out.println("cleaning " + username);
                         for (int i =0; i < 4; i++){
                             DBCursor cursor2 = coll[i].find(query);
 
                             try {
-                                while (cursor.hasNext()){
-                                    DBObject temp2 = cursor.next();
-                                    coll[i].remove(temp);
+                                while (cursor2.hasNext()){
+                                    DBObject temp2 = cursor2.next();
+                                    coll[i].remove(temp2);
                                 }
                             } finally{
                                 cursor2.close();
