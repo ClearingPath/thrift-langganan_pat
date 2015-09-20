@@ -48,15 +48,14 @@ public class miniIRCHandler implements miniIRC.Iface {
     }
 
     @Override
-    public int message(String username, String channelname, String msg) throws TException {
-       
-        return 0;
+    public int message(String username, String channelname, String msg) throws TException {    
+        return PutMessage(username,channelname,msg);
     }
 
     @Override
     public String regularUpdate(String username) throws TException {
         //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        String ret = "";
+        String ret = GetMessage(username);
         return ret;
     }
     /**
@@ -279,7 +278,7 @@ public class miniIRCHandler implements miniIRC.Iface {
         return ret;
     }
     
-    public String GetMessages(String username){
+    public String GetMessage(String username){
         String ret ="";
         try {
             MongoClient mongoClient = new MongoClient();
@@ -321,6 +320,7 @@ public class miniIRCHandler implements miniIRC.Iface {
             try{
                 java.util.Date date= new java.util.Date();
                 while (cursor.hasNext()){
+                    ret = 1;
                     BasicDBObject temp = (BasicDBObject) cursor.next();
                     String target = temp.get("username").toString();
                     BasicDBObject put = new BasicDBObject("target",target)
@@ -329,12 +329,14 @@ public class miniIRCHandler implements miniIRC.Iface {
                                         .append("message", msg)
                                         .append("timestamp", date);
                     coll.insert(put);
+                    ret = 0;
                 }
             } finally {
                 cursor.close();
             }
             
         } catch (UnknownHostException ex) {
+            ret = 1;
             Logger.getLogger(miniIRCHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
         return ret;
