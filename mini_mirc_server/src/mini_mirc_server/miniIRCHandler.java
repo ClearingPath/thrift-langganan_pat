@@ -15,6 +15,7 @@ import java.net.UnknownHostException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.thrift.TException;
+import org.bson.BSONObject;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
 
@@ -41,7 +42,9 @@ public class miniIRCHandler implements miniIRC.Iface {
 
     @Override
     public int exit(String username) throws TException {
-        return SoftDelete(username);
+        System.out.println(username + " exiting...");
+//        return SoftDelete(username);
+        return 0;
     }
 
     @Override
@@ -124,7 +127,7 @@ public class miniIRCHandler implements miniIRC.Iface {
             
             try {
                 while(cursor.hasNext()) {
-                    coll.dropIndex(cursor.next());
+                    coll.remove(cursor.next());
                 }
             } finally {
                 cursor.close();
@@ -142,7 +145,7 @@ public class miniIRCHandler implements miniIRC.Iface {
      * @param Username
      * @return code
      */
-    public static int DeleteUserInChannel (String Username){
+    public int DeleteUserInChannel (String Username){
         int ret = 0;
         try {
             
@@ -155,7 +158,7 @@ public class miniIRCHandler implements miniIRC.Iface {
             
             try {
                 while(cursor.hasNext()) {
-                    coll.dropIndex(cursor.next());
+                    coll.remove(cursor.next());
                 }
             } finally {
                 cursor.close();
@@ -246,7 +249,7 @@ public class miniIRCHandler implements miniIRC.Iface {
      * @param username
      * @return code
      */
-    public static int SoftDelete (String username){
+    public int SoftDelete (String username){
         int ret = 0;
         try {
             MongoClient mongoClient = new MongoClient();
@@ -276,12 +279,12 @@ public class miniIRCHandler implements miniIRC.Iface {
         return ret;
     }
     
-    public static String GetMessages(String username){
+    public String GetMessages(String username){
         String ret ="";
         try {
             MongoClient mongoClient = new MongoClient();
             DB db = mongoClient.getDB( "mirc" );
-            DBCollection coll = db.getCollection("activeUser");
+            DBCollection coll = db.getCollection("inbox");
             BasicDBObject query = new BasicDBObject("username", username);
             JSONObject obj = new JSONObject();
             JSONArray arr = new JSONArray();
@@ -301,6 +304,7 @@ public class miniIRCHandler implements miniIRC.Iface {
         } catch (UnknownHostException ex) {
             Logger.getLogger(miniIRCHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
+        UpdateLastActive(username);
         return ret;
     }
     
@@ -310,10 +314,25 @@ public class miniIRCHandler implements miniIRC.Iface {
             MongoClient mongoClient = new MongoClient();
             DB db = mongoClient.getDB( "mirc" );
             DBCollection coll = db.getCollection("inbox");
-            DBCollection coll2 = db.getCollection(channelname);
+            DBCollection coll2 = db.getCollection("channelCollection");
             BasicDBObject query = new BasicDBObject("channel", channelname);
             DBCursor cursor = coll2.find(query);
             
+            try{
+                java.util.Date date= new java.util.Date();
+                while (cursor.hasNext()){
+                    BasicDBObject temp = (BasicDBObject) cursor.next();
+                    String target = temp.get("username").toString();
+                    BasicDBObject put = new BasicDBObject("target",target)
+                                        .append("usermane", username)
+                                        .append("channel", channelname)
+                                        .append("message", msg)
+                                        .append("timestamp", date);
+                    coll.insert(put);
+                }
+            } finally {
+                cursor.close();
+            }
             
         } catch (UnknownHostException ex) {
             Logger.getLogger(miniIRCHandler.class.getName()).log(Level.SEVERE, null, ex);
