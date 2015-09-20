@@ -59,7 +59,9 @@ public class Mini_mirc_server {
                         Logger.getLogger(Mini_mirc_server.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
-            }
+            };
+            
+            new Thread(cleaner).start();
         } catch (Exception x){
             x.printStackTrace();
         }
