@@ -48,7 +48,7 @@ public class Mini_mirc_client {
 		}
 	    };
 	    
-            //new Thread(updateThread).start();
+            new Thread(updateThread).start();
 	    
 	    perform(transport, client);
 	    

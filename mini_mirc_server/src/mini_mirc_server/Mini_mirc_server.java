@@ -50,8 +50,9 @@ public class Mini_mirc_server {
             Runnable cleaner = new Runnable() {
                 public void run(){
                     try {
-                        Thread.sleep(1000 * 60 * 5);
+//                        Thread.sleep(1000 * 60 * 5);
                         while (true){
+                            System.out.println("cleaner running...");
                             cleaner();
                             Thread.sleep(1000 * 60 * 5);
                         }
@@ -101,9 +102,7 @@ public class Mini_mirc_server {
                         handler.SoftDelete(target);
                     }
                 }
-                if (hard_clean){
-                    HardClean();
-                }
+                HardClean();
             } finally{
                 cursor.close();
             }
