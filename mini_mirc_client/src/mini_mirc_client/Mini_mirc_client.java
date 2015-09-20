@@ -33,9 +33,10 @@ public class Mini_mirc_client {
 	    transport = new TSocket("localhost", 2121);
 	    
 	    TProtocol protocol = new TBinaryProtocol(transport);
-	    miniIRC.Client client = new miniIRC.Client (protocol);
+	    final miniIRC.Client client = new miniIRC.Client (protocol);
 	    
-	    Runnable updateThread = new Runnable(){
+	    Runnable updateThread;
+	    updateThread = new Runnable(){
 		public void run(){
 		    try{
 			updateMsg(client);
@@ -68,6 +69,7 @@ public class Mini_mirc_client {
     }
     
     private static void perform (TTransport transport, miniIRC.Client client) throws TException {
+    //private static void perform () throws TException {
 	boolean exit = false;
 	Scanner input = new Scanner(System.in);
 	
@@ -119,7 +121,6 @@ public class Mini_mirc_client {
 		    
 		    break;
 		case "/LEAVE":
-		    
 		    if (username.isEmpty()){
 			System.out.println("Error: Unregistered user");
 		    } else {
@@ -146,9 +147,7 @@ public class Mini_mirc_client {
 		    break;
 		    
 		default:
-		    
 		    if (resSplit[0].startsWith("@")){ // message
-			System.out.println("message mode");
 			res = client.message(username, resSplit[0].substring(1), resSplit[1]);
 			if (res == 0) {
 			    System.out.println("Status: Msg to " + resSplit[0].substring(1) + " sent"); 
