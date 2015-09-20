@@ -28,6 +28,7 @@ public class Mini_mirc_client {
     
     public static String username = "";
     public static String newMsg;
+    public static boolean update = true;
     public static void main(String[] args) {
         
 	try{
@@ -41,15 +42,17 @@ public class Mini_mirc_client {
 	    updateThread = new Runnable(){
 		public void run(){
 		    try{
-			updateMsg(client);
-			Thread.sleep(1000);
+			while (update){
+			    updateMsg(client);
+			    Thread.sleep(1000);
+			}
 		    } catch (Exception E){
 			E.printStackTrace();
 		    }
 		}
 	    };
 	    
-            //new Thread(updateThread).start();
+            new Thread(updateThread).start();
 	    
 	    perform(transport, client);
 	    
@@ -59,7 +62,7 @@ public class Mini_mirc_client {
     }
     
     public static void generateUname(){
-	String commonUsername[] = {"Earthshaker", "Sven", "Tiny", "Kunkka", "Beastmaster", "DragonKnight", "Axe", "Pudge", "SandKing", "Slardar", "Tidehunter", "WraithKing"};
+	String commonUsername[] = {"Earthshaker", "Sven", "Tiny", "Kunkka", "Beastmaster", "DragonKnight", "Axe", "Pudge", "SandKing", "Slardar", "Tidehunter", "WraithKing", "Bloodseeker", "Windranger", "StormSpirit", "Lina", "ShadowFiend", "AntiMage", "PhantomAssassin"};
 	String uname;
 	
 	int randIndex = (int) Math.round(Math.random() * (commonUsername.length - 1));
@@ -113,11 +116,14 @@ public class Mini_mirc_client {
 		    System.out.println("Status: Checking channel: " + resSplit[1]);
 		    
 		    res = client.join(username, resSplit[1]);
-		    if (res == 0){
+		    if (res == 0 || res == 2){
 			System.out.println("Status: Joined channel: " + resSplit[1]);
 		    } else {
 			if (res == 1){
 			    System.out.println("Error: Channel " + resSplit[1] + " already joined!");
+			}
+			else {
+			    System.out.println("Error: code #" + res + " on channel join");
 			}
 		    }
 		    
@@ -141,6 +147,7 @@ public class Mini_mirc_client {
 			System.out.println("Status: Exit success"); 
 			username = "";
 			exit = true;
+			update = false;
 		    }
 		    else {
 			System.out.println("Error: Channel error! Error code #" + res);
@@ -165,7 +172,10 @@ public class Mini_mirc_client {
     }
     
     public static void updateMsg(miniIRC.Client client) throws TException {
+	System.out.println("starting update!");
+	
 	newMsg = client.regularUpdate(username);
+	
 	System.out.println("Got update!");
 	System.out.println(newMsg);
     }
