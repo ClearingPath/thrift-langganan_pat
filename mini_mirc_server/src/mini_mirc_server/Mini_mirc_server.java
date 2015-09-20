@@ -63,6 +63,21 @@ public class Mini_mirc_server {
             };
             
             new Thread(cleaner).start();
+            
+            Runnable ultClean = new Runnable() {
+                public void run(){
+                    try {
+                        while (true){
+                            UltimateClean();
+                            Thread.sleep(1000 * 60 * 60);
+                        }
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(Mini_mirc_server.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            };
+            
+            new Thread(ultClean).start();
         } catch (Exception x){
             x.printStackTrace();
         }
@@ -123,29 +138,63 @@ public class Mini_mirc_server {
             
             DBCursor cursor = coll[3].find();
             
-                try {
-                    while (cursor.hasNext()){
-                        BasicDBObject temp = (BasicDBObject) cursor.next();
-                        String username = temp.getString("username");
-                        BasicDBObject query = new BasicDBObject("username", username);
-                        System.out.println("cleaning " + username);
-                        for (int i =0; i < 4; i++){
-                            DBCursor cursor2 = coll[i].find(query);
+            try {
+                while (cursor.hasNext()){
+                    BasicDBObject temp = (BasicDBObject) cursor.next();
+                    String username = temp.getString("username");
+                    BasicDBObject query = new BasicDBObject("username", username);
+                    System.out.println("cleaning " + username);
+                    for (int i =0; i < 4; i++){
+                        DBCursor cursor2 = coll[i].find(query);
 
-                            try {
-                                while (cursor2.hasNext()){
-                                    DBObject temp2 = cursor2.next();
-                                    coll[i].remove(temp2);
-                                }
-                            } finally{
-                                cursor2.close();
+                        try {
+                            while (cursor2.hasNext()){
+                                DBObject temp2 = cursor2.next();
+                                coll[i].remove(temp2);
                             }
+                        } finally{
+                            cursor2.close();
                         }
                     }
-                } finally{
-                    cursor.close();
                 }
+            } finally{
+                cursor.close();
+            }
             
+        } catch (UnknownHostException ex) {
+            Logger.getLogger(Mini_mirc_server.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    /**
+     * ONLY IF NO USER IS IN THE ACTIVE OR PASIVE COLLECTION;getting server to clean state
+     */
+    private static void UltimateClean(){
+        try {
+            MongoClient mongoClient = new MongoClient();
+            DB db = mongoClient.getDB( "mirc" );
+            DBCollection coll[] = new DBCollection[4];
+            coll[0] = db.getCollection("activeUser");
+            coll[1] = db.getCollection("passiveUser");
+            coll[2] = db.getCollection("channelCollection");
+            coll[3] = db.getCollection("inbox"); 
+            
+            DBCursor cursor[] = new DBCursor[4];
+            cursor[0] = coll[0].find();
+            cursor[1] = coll[1].find();
+            cursor[2] = coll[2].find();
+            cursor[3] = coll[3].find();
+            try{
+                if (!cursor[0].hasNext() && !cursor[1].hasNext() && cursor[2].hasNext() && cursor[3].hasNext()){
+                    System.out.println("SYSTEM RESTARTING with ULTIMATE CLEANING !");
+                    for(int i = 2; i <= 3; i ++){
+                        coll[i].drop();
+                    }
+                    System.out.println("RESTART COMPLETE!");
+                }
+            } finally{
+                cursor[0].close();
+                cursor[1].close();
+            }
         } catch (UnknownHostException ex) {
             Logger.getLogger(Mini_mirc_server.class.getName()).log(Level.SEVERE, null, ex);
         }
