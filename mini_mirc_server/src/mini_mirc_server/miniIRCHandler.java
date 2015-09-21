@@ -343,7 +343,7 @@ public class miniIRCHandler implements miniIRC.Iface {
                         java.util.Date date= new java.util.Date();
                         while (cursor2.hasNext()){
                             ret = 1;
-                            BasicDBObject temp = (BasicDBObject) cursor.next();
+                            BasicDBObject temp = (BasicDBObject) cursor2.next();
                             String target = temp.get("username").toString();
                             BasicDBObject put = new BasicDBObject("target",target)
                                                 .append("username", username)
