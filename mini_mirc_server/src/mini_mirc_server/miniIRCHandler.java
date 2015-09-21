@@ -49,8 +49,15 @@ public class miniIRCHandler implements miniIRC.Iface {
     }
 
     @Override
-    public int message(String username, String channelname, String msg) throws TException {    
-        return PutMessage(username,channelname,msg);
+    public int message(String username, String channelname, String msg) throws TException {
+        int ret=0;
+        if (channelname.equalsIgnoreCase("*")){
+            ret=PutMessageWild(username,msg);
+        }
+        else{
+            ret=PutMessage(username,channelname,msg);
+        }
+        return ret;
     }
 
     @Override
@@ -371,5 +378,33 @@ public class miniIRCHandler implements miniIRC.Iface {
             Logger.getLogger(miniIRCHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
         return ret;
+    }
+    
+    private int PutMessageWild(String username,String msg){
+        int ret = 0;
+        
+        try {
+            MongoClient mongoClient = new MongoClient();
+            DB db = mongoClient.getDB( "mirc" );
+            DBCollection coll2 = db.getCollection("channelCollection");
+            BasicDBObject query = new BasicDBObject("username", username);
+            System.out.println("Wild message appear from " + username + " !");
+            DBCursor cursor = coll2.find(query);
+            try{
+                while(cursor.hasNext()){
+                    ret = 1;
+                    BasicDBObject temp = (BasicDBObject) cursor.next();
+                    String channelname = temp.getString("channel");
+                    ret = PutMessage(username,channelname,msg);
+                }
+            } finally {
+                cursor.close();
+            }
+        } catch (UnknownHostException ex) {
+            Logger.getLogger(miniIRCHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+            
+        
+        return 0;
     }
 }
