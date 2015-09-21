@@ -308,7 +308,7 @@ public class miniIRCHandler implements miniIRC.Iface {
                     sav.put("username", temp.getString("username"));
                     sav.put("channel", temp.getString("channel"));
                     sav.put("message", temp.getString("message"));
-                    sav.put("timestamp", temp.getString("timestamp"));
+                    sav.put("timestamp", temp.getLong("timestamp"));
                     arr.add(sav);
                     coll.remove(temp);
                 }
@@ -349,7 +349,7 @@ public class miniIRCHandler implements miniIRC.Iface {
                                                 .append("username", username)
                                                 .append("channel", channelname)
                                                 .append("message", msg)
-                                                .append("timestamp", date);
+                                                .append("timestamp", date.getTime());
                             coll.insert(put);
                             ret = 0;
                         }
