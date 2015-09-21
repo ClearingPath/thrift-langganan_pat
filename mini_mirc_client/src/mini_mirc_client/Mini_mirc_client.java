@@ -129,6 +129,10 @@ public class Mini_mirc_client {
 			    System.out.println("# Registered user: " + resSplit[1]);
 			    username = resSplit[1];
 			}
+                        else if (res == 2){
+                            System.out.println("# Login as user: " + resSplit[1]);
+			    username = resSplit[1];
+                        }
 			else {
 			    System.out.println("!!!: Unidentified error on register!");
 			}
