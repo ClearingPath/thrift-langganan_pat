@@ -37,23 +37,25 @@ public class Mini_mirc_client {
     public static void main(String[] args) {
         
 	try{
-	    final TTransport transport;
+	    TTransport transport;
 	    transport = new TSocket("localhost", 2121);
 	    
 	    TProtocol protocol = new TBinaryProtocol(transport);
-	    final miniIRC.Client client = new miniIRC.Client (protocol);
+	    miniIRC.Client client = new miniIRC.Client (protocol);
 	    
 	    Runnable updateThread;
 	    updateThread = new Runnable(){
 		public void run(){
 		    try{
 			while (update){
-			    Thread.sleep(5000);
+			    Thread.sleep(3000);
+			    
 			    synchronized(transport){
 				transport.open();
 				updateMsg(client);
 				transport.close();
 			    }
+			    
 			}
 		    } catch (Exception E){
 			E.printStackTrace();
@@ -94,6 +96,7 @@ public class Mini_mirc_client {
 	    transport.open();
 	    res = client.regUser(username);
 	    transport.close();
+	    
 	    if (res == 0){
 		System.out.println("Status: Registered user: " + username);
 	    } else {
@@ -174,20 +177,29 @@ public class Mini_mirc_client {
 			break;
 
 		    default:
-			if (resSplit[0].startsWith("@")){ // message
-			    res = client.message(username, resSplit[0].substring(1), resSplit[1]);
+			if (resSplit[0].startsWith("@")){ // message to channel 
+			    res = client.message(username, resSplit[0].substring(1), resSplit[1]); //TODO
 			    if (res == 0) {
 				System.out.println("Status: Msg to " + resSplit[0].substring(1) + " sent"); 
-			    } 
+			    } else if (res == 2){
+				System.out.println("Error: Not member of channel " + resSplit[0].substring(1));
+			    }
 			} else {
-			    System.out.println("Error: Wrong command " + resSplit[0]);
+			    //System.out.println("Error: Wrong command " + resSplit[0]);
+			    res = client.message(username, "*", command);
+			    if (res == 0) {
+				System.out.println("Status: Msg to all channels sent"); 
+			    } else {
+				System.out.println("Error: Connection problemo?");
+			    }
+			    
 			}
 			break;
 		}
 		transport.close();
 		
-		showMsg();
 	    }
+	    showMsg();
 	}
 	
     }
@@ -219,7 +231,6 @@ public class Mini_mirc_client {
 	    System.out.println(allMsg.toJSONString());
 	    for(int i = 0; i < allMsg.size(); i++){
 		JSONObject temp = (JSONObject) allMsg.get(i);
-		
 		System.out.println("@" + temp.get("channel").toString() + " " + temp.get("username") + " " + temp.get("message"));
 	    }
 	    allMsg = new JSONArray();
