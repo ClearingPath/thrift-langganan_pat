@@ -7,12 +7,12 @@ package mini_mirc_client;
 
 /**
  *
- * @author Jonathan
+ * @author Feli
  */
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
@@ -20,6 +20,8 @@ import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 import mini_mirc_client.miniIRC;
 import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
 public class Mini_mirc_client {
 
@@ -28,28 +30,31 @@ public class Mini_mirc_client {
      */
     
     public static String username = "";
-    public static String newMsg;
     public static boolean update = true;
+    public static JSONArray allMsg = new JSONArray();
+    
     public static void main(String[] args) {
         
 	try{
-	    final TTransport transport;
+	    TTransport transport;
 	    transport = new TSocket("localhost", 2121);
 	    
 	    TProtocol protocol = new TBinaryProtocol(transport);
-	    final miniIRC.Client client = new miniIRC.Client (protocol);
+	    miniIRC.Client client = new miniIRC.Client (protocol);
 	    
 	    Runnable updateThread;
 	    updateThread = new Runnable(){
 		public void run(){
 		    try{
 			while (update){
-			    Thread.sleep(5000);
+			    Thread.sleep(3000);
+			    
 			    synchronized(transport){
 				transport.open();
 				updateMsg(client);
 				transport.close();
 			    }
+			    
 			}
 		    } catch (Exception E){
 			E.printStackTrace();
@@ -73,7 +78,7 @@ public class Mini_mirc_client {
 	int randIndex = (int) Math.round(Math.random() * (commonUsername.length - 1));
 	int randEnd = (int) (Math.random() * 999);
 	uname = commonUsername[randIndex] + randEnd;
-	System.out.println("Status: Generated new username: " + uname);
+	System.out.println("# Generated new username: " + uname);
 	
 	username = uname;
     }
@@ -90,10 +95,18 @@ public class Mini_mirc_client {
 	    transport.open();
 	    res = client.regUser(username);
 	    transport.close();
+	    
 	    if (res == 0){
-		System.out.println("Status: Registered user: " + username);
+		System.out.println("# Registered user: " + username);
 	    } else {
-		System.out.println("Error: Unidentified error on register!");
+		System.out.println("!!!: Unidentified error on register!");
+		
+		generateUname();
+		transport.open();
+		res = client.regUser(username);
+		if (res == 0)
+		    System.out.println("# Registered user: " + username);
+		transport.close();
 	    }
 	}
 	
@@ -109,95 +122,130 @@ public class Mini_mirc_client {
 
 		switch (commandWord){
 		    case "/NICK":
-			System.out.println("Status: Registering user: " + resSplit[1]);
+			System.out.println("# Registering user: " + resSplit[1]);
 			res = client.regUser(resSplit[1]);
 
 			if (res == 0){
-			    System.out.println("Status: Registered user: " + resSplit[1]);
+			    System.out.println("# Registered user: " + resSplit[1]);
 			    username = resSplit[1];
 			}
 			else {
-			    System.out.println("Error: Unidentified error on register!");
+			    System.out.println("!!!: Unidentified error on register!");
 			}
 			break;
 		    case "/JOIN": 
-			System.out.println("Status: Checking channel: " + resSplit[1]);
+			System.out.println("# Checking channel: " + resSplit[1]);
 
 			res = client.join(username, resSplit[1]);
 			if (res == 0 || res == 2){
-			    System.out.println("Status: Joined channel: " + resSplit[1]);
+			    System.out.println("# Joined channel: " + resSplit[1]);
 			} else {
 			    if (res == 1){
-				System.out.println("Error: Channel " + resSplit[1] + " already joined!");
+				System.out.println("!!!: Channel " + resSplit[1] + " already joined!");
 			    }
 			    else {
-				System.out.println("Error: code #" + res + " on channel join");
+				System.out.println("!!!: code #" + res + " on channel join");
 			    }
 			}
 
 			break;
 		    case "/LEAVE":
 			if (username.isEmpty()){
-			    System.out.println("Error: Unregistered user");
+			    System.out.println("!!!: Unregistered user");
 			} else {
-			    System.out.println("Status: " + username + " exiting channel " + resSplit[1]);
+			    System.out.println("# " + username + " exiting channel " + resSplit[1]);
 			    res = client.leave(username, resSplit[1]);
-			    if (res == 0) System.out.println("Status: Success"); 
-			    else System.out.println("Error: Channel error!");
+			    if (res == 0) System.out.println("# Success"); 
+			    else System.out.println("!!!: Channel error!");
 			}
 			break;
 
 		    case "/EXIT":
-			System.out.println("Status: " + username + " closing...");
+			System.out.println("# " + username + " closing...");
 
 			res = client.exit(username);
 			if (res == 0) {
-			    System.out.println("Status: Exit success"); 
+			    System.out.println("# Exit success"); 
 			    username = "";
 			    exit = true;
 			    update = false;
 			}
 			else {
-			    System.out.println("Error: Channel error! Error code #" + res);
+			    System.out.println("!!!: Channel error! Error code #" + res);
 			}
 			break;
 
 		    default:
-			if (resSplit[0].startsWith("@")){ // message
-			    res = client.message(username, resSplit[0].substring(1), resSplit[1]);
+			if (resSplit[0].startsWith("@")){ // message to channel 
+			    res = client.message(username, resSplit[0].substring(1), resSplit[1]); 
 			    if (res == 0) {
-				System.out.println("Status: Msg to " + resSplit[0].substring(1) + " sent"); 
-			    } 
+				System.out.println("# Msg to " + resSplit[0].substring(1) + " sent"); 
+			    } else if (res == 2){
+				System.out.println("!!!: Not member of channel " + resSplit[0].substring(1));
+			    }
 			} else {
-			    System.out.println("Error: Wrong command " + resSplit[0]);
+			    
+			    res = client.message(username, "*", command);
+			    if (res == 0) {
+				System.out.println("# Msg to all channels sent"); 
+			    } else {
+				System.out.println("!!!: Connection problemo?");
+			    }
+			    
 			}
 			break;
 		}
 		transport.close();
 		
-		showMsg();
 	    }
+	    showMsg();
 	}
 	
     }
     
     public static void updateMsg(miniIRC.Client client) throws TException {
-	//System.out.println("starting update!");
-	
-	newMsg = newMsg + client.regularUpdate(username);
-	
-	//System.out.println("Got update!");
-	//System.out.println(newMsg);
+	String temp = client.regularUpdate(username);
+	temp = temp.replaceAll("\\{\"msg\":\\[\\]\\}", "");
+	if (!temp.isEmpty() && temp.length() > 6){
+	    
+	    try{
+		JSONParser J = new JSONParser();
+		
+		JSONObject jeson = new JSONObject();
+		jeson = (JSONObject) J.parse(temp);
+		allMsg.add(jeson);
+		
+	    } catch (Exception E) {E.printStackTrace();}
+	}
     }
     
     public static void showMsg(){
-	JSONArray msgs = new JSONArray();
-	synchronized(newMsg){
-	    System.out.println(newMsg);
-	    newMsg = "";
-	}
-	
-	
+	try {
+	    synchronized(allMsg){
+		
+		if (!allMsg.isEmpty() && allMsg.size() > 0){
+		    for(int i = 0; i < allMsg.size(); i++){
+			JSONObject temp = (JSONObject) allMsg.get(i);
+			JSONArray tempArr = (JSONArray) temp.get("msg");
+
+			for(int j = 0; j < tempArr.size(); j++){
+			    temp = (JSONObject) tempArr.get(j);
+			    SimpleDateFormat formatDate = new SimpleDateFormat("yy-MM-dd HH:mm:ss");
+			    
+			    
+			    Date sendDat = new Date();
+			    sendDat.setTime((long) temp.get("timestamp"));
+			    
+			    System.out.println(">> [" + temp.get("channel").toString() 
+				+ "] [" + temp.get("username") 
+				+ "] " + temp.get("message")
+				+ " || " + formatDate.format(sendDat));
+			}
+		    }
+		}
+		allMsg.clear();
+	    }
+	} catch (Exception E) { E.printStackTrace(); }
     }
     
 }
