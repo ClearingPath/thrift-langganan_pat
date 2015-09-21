@@ -20,6 +20,8 @@ import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 import mini_mirc_client.miniIRC;
 import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
 public class Mini_mirc_client {
 
@@ -30,6 +32,8 @@ public class Mini_mirc_client {
     public static String username = "";
     public static String newMsg;
     public static boolean update = true;
+    public static JSONArray allMsg = new JSONArray();
+    
     public static void main(String[] args) {
         
 	try{
@@ -94,6 +98,13 @@ public class Mini_mirc_client {
 		System.out.println("Status: Registered user: " + username);
 	    } else {
 		System.out.println("Error: Unidentified error on register!");
+		
+		generateUname();
+		transport.open();
+		res = client.regUser(username);
+		if (res == 0)
+		    System.out.println("Status: Registered user: " + username);
+		transport.close();
 	    }
 	}
 	
@@ -182,19 +193,47 @@ public class Mini_mirc_client {
     }
     
     public static void updateMsg(miniIRC.Client client) throws TException {
-	//System.out.println("starting update!");
-	
-	newMsg = newMsg + client.regularUpdate(username);
-	
-	//System.out.println("Got update!");
-	//System.out.println(newMsg);
+	String temp = client.regularUpdate(username);
+	System.out.println(temp);
+	temp = temp.replaceAll("\\{\"msg\":\\[\\]\\}", "");
+	if (!temp.isEmpty() && temp.length() > 6){
+	    
+	    //System.out.println("templength = " + temp.length());
+	    
+//	    String msgString[] = temp.split("\\{\"msg\":\\[");
+//	    for( String msgS: msgString ){
+//		if (!msgS.isEmpty() && msgS.length() > 5){
+//		    System.out.println("msgs = " + msgS);
+//		    int index = msgS.lastIndexOf("]") - 1;
+//		    System.out.println("idx = " + index);
+//
+//		    String tempLagi = msgS.substring(0, msgS.lastIndexOf("]") - 1);
+//
+//		    JSONObject tempJSON;
+//		    JSONParser J = new JSONParser();
+//		    try {
+//			tempJSON = new JSONObject( (JSONObject) J.parse(tempLagi) );
+//			allMsg.add(tempJSON);
+//		    } catch (Exception E) {
+//			E.printStackTrace();
+//		    }
+//		}
+//	    }
+	    try{
+		System.out.println(temp);
+		JSONParser J = new JSONParser();
+		JSONObject jeson = new JSONObject((JSONObject) J.parse(temp));
+		allMsg.add(jeson);
+	    } catch (Exception E) {E.printStackTrace();}
+	    
+	}
     }
     
     public static void showMsg(){
-	JSONArray msgs = new JSONArray();
-	synchronized(newMsg){
-	    System.out.println(newMsg);
-	    newMsg = "";
+	
+	synchronized(allMsg){
+	    System.out.println(allMsg.toJSONString());
+	    allMsg = new JSONArray();
 	}
 	
 	
