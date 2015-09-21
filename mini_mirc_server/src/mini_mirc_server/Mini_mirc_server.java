@@ -16,8 +16,8 @@ import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.thrift.server.TServer; 
-import org.apache.thrift.server.TServer.Args; 
-import org.apache.thrift.server.TSimpleServer; 
+import org.apache.thrift.server.TThreadPoolServer.Args; 
+import org.apache.thrift.server.TThreadPoolServer;
 import org.apache.thrift.transport.TServerSocket; 
 import org.apache.thrift.transport.TServerTransport; 
 
@@ -87,7 +87,7 @@ public class Mini_mirc_server {
     public static void simple(miniIRC.Processor processor){
         try {
             TServerTransport serverTransport = new TServerSocket(2121);
-            TServer server =new TSimpleServer(new Args(serverTransport).processor(processor));
+            TServer server =new TThreadPoolServer(new Args(serverTransport).processor(processor));
             
             System.out.println("Starting simple server...");
             server.serve();
