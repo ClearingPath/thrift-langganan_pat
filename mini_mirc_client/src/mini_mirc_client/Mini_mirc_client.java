@@ -194,38 +194,22 @@ public class Mini_mirc_client {
     
     public static void updateMsg(miniIRC.Client client) throws TException {
 	String temp = client.regularUpdate(username);
-	System.out.println(temp);
+	//System.out.println(temp);
 	temp = temp.replaceAll("\\{\"msg\":\\[\\]\\}", "");
 	if (!temp.isEmpty() && temp.length() > 6){
 	    
-	    //System.out.println("templength = " + temp.length());
-	    
-//	    String msgString[] = temp.split("\\{\"msg\":\\[");
-//	    for( String msgS: msgString ){
-//		if (!msgS.isEmpty() && msgS.length() > 5){
-//		    System.out.println("msgs = " + msgS);
-//		    int index = msgS.lastIndexOf("]") - 1;
-//		    System.out.println("idx = " + index);
-//
-//		    String tempLagi = msgS.substring(0, msgS.lastIndexOf("]") - 1);
-//
-//		    JSONObject tempJSON;
-//		    JSONParser J = new JSONParser();
-//		    try {
-//			tempJSON = new JSONObject( (JSONObject) J.parse(tempLagi) );
-//			allMsg.add(tempJSON);
-//		    } catch (Exception E) {
-//			E.printStackTrace();
-//		    }
-//		}
-//	    }
 	    try{
-		System.out.println(temp);
+		//System.out.println(temp);
 		JSONParser J = new JSONParser();
-		JSONObject jeson = new JSONObject((JSONObject) J.parse(temp));
-		allMsg.add(jeson);
+		JSONArray jArray = new JSONArray ();
+		jArray = ((JSONArray) J.parse(temp));
+		
+		for (int i = 0; i < jArray.size(); i++){
+		    JSONObject jeson = new JSONObject();
+		    jeson = (JSONObject) jArray.get(i);
+		    allMsg.add(jeson);
+		}
 	    } catch (Exception E) {E.printStackTrace();}
-	    
 	}
     }
     
@@ -233,10 +217,14 @@ public class Mini_mirc_client {
 	
 	synchronized(allMsg){
 	    System.out.println(allMsg.toJSONString());
+	    for(int i = 0; i < allMsg.size(); i++){
+		JSONObject temp = (JSONObject) allMsg.get(i);
+		
+		System.out.println("@" + temp.get("channel").toString() + " " + temp.get("username") + " " + temp.get("message"));
+	    }
 	    allMsg = new JSONArray();
+	    
 	}
-	
-	
     }
     
 }
