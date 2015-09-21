@@ -12,6 +12,7 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import java.net.UnknownHostException;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.thrift.TException;
@@ -188,8 +189,19 @@ public class miniIRCHandler implements miniIRC.Iface {
             
             try {
                 if(cursor.hasNext()) {
-                    ret = 1;
+                    Date now = new Date();
+                    long timestamp_now = now.getTime();
+                    long treshold = timestamp_now - (1000 * 10); //10
+                    BasicDBObject temp = (BasicDBObject) cursor.next();
+                    Date time_temp = (Date) temp.get("timestamp");
+                    long timestamp_temp = time_temp.getTime();
+                    if (timestamp_temp < treshold){
+                        ret=2;
+                        System.out.println(username + " has joined back!");
+                    }else {
+                        ret = 1;
                     System.err.println(username + " has been used !");
+                    }
                 }
                 else {
                     java.util.Date date= new java.util.Date();
@@ -319,26 +331,40 @@ public class miniIRCHandler implements miniIRC.Iface {
             DB db = mongoClient.getDB( "mirc" );
             DBCollection coll = db.getCollection("inbox");
             DBCollection coll2 = db.getCollection("channelCollection");
-            BasicDBObject query = new BasicDBObject("channel", channelname);
+            BasicDBObject query2 = new BasicDBObject("channel", channelname);
+            BasicDBObject query = new BasicDBObject("channel", channelname)
+                                        .append("username", username);
             DBCursor cursor = coll2.find(query);
-            System.out.println("Got message from " + username);
             try{
-                java.util.Date date= new java.util.Date();
-                while (cursor.hasNext()){
-                    ret = 1;
-                    BasicDBObject temp = (BasicDBObject) cursor.next();
-                    String target = temp.get("username").toString();
-                    BasicDBObject put = new BasicDBObject("target",target)
-                                        .append("username", username)
-                                        .append("channel", channelname)
-                                        .append("message", msg)
-                                        .append("timestamp", date);
-                    coll.insert(put);
-                    ret = 0;
+                if (cursor.hasNext()){
+                    DBCursor cursor2 = coll2.find(query2);
+                    System.out.println("Got message from " + username);
+                    try{
+                        java.util.Date date= new java.util.Date();
+                        while (cursor2.hasNext()){
+                            ret = 1;
+                            BasicDBObject temp = (BasicDBObject) cursor.next();
+                            String target = temp.get("username").toString();
+                            BasicDBObject put = new BasicDBObject("target",target)
+                                                .append("username", username)
+                                                .append("channel", channelname)
+                                                .append("message", msg)
+                                                .append("timestamp", date);
+                            coll.insert(put);
+                            ret = 0;
+                        }
+                    } finally {
+                        cursor2.close();
+                    }
                 }
-            } finally {
+                else{
+                    ret=2;
+                    System.out.println(username + " not registered to Channel : " + channelname);
+                }
+            }finally{
                 cursor.close();
             }
+            
             
         } catch (UnknownHostException ex) {
             ret = 1;
